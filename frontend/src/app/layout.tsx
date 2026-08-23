@@ -13,13 +13,17 @@ export const metadata: Metadata = {
   description: "A mindful, privacy-first companion for menstrual cycle mapping and body literacy. Your health data stays entirely yours, stored locally and securely.",
   keywords: ["menstrual cycle", "wellness tracker", "privacy-first tracker", "body literacy", "women health"],
   authors: [{ name: "Nura Team" }],
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#fbf8f3",
+  themeColor: "#E07A5F",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
+
+import { PWARegister } from "@/components/pwa/PWARegister";
 
 export default function RootLayout({
   children,
@@ -42,6 +46,7 @@ export default function RootLayout({
         </a>
         
         <AuthProvider>
+          <PWARegister />
           <main id="main-content" className="flex-1 flex flex-col">
             {children}
           </main>
