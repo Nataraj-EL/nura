@@ -87,7 +87,7 @@ export default function LoginPage() {
               disabled={isSubmitting}
             />
             <p className="text-xs text-nura-slate/50 px-2">
-              For demo, enter phone number with or without country code.
+              <span className="text-nura-terracotta font-semibold">[DEV ONLY]</span> For demo, enter phone number with or without country code.
             </p>
           </div>
 

@@ -24,6 +24,11 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // Guard against file://, chrome-extension://, etc. schemes to prevent localhost security errors
+  if (!event.request.url.startsWith("http:") && !event.request.url.startsWith("https:")) {
+    return;
+  }
+
   const url = new URL(event.request.url);
 
   // SECURE SW CACHING BOUNDARY RULES:
