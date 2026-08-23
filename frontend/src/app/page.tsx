@@ -1,10 +1,16 @@
+"use client";
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 export default function Home() {
+  const { user, logout } = useAuth();
+
   return (
-    <div className="min-h-screen flex flex-col justify-between">
+    <div className="min-h-screen flex flex-col justify-between bg-nura-cream">
       {/* Header Navigation */}
       <header className="w-full px-6 py-5 md:px-12 flex justify-between items-center glass-panel sticky top-0 z-40">
         <div className="flex items-center gap-2">
@@ -34,10 +40,25 @@ export default function Home() {
           </a>
         </nav>
 
-        <div>
-          <Button variant="outline" size="sm" className="hidden sm:inline-flex">
-            Get Updates
-          </Button>
+        <div className="flex items-center gap-4">
+          {user ? (
+            <>
+              <Link href="/dashboard">
+                <Button variant="outline" size="sm">
+                  Go to Dashboard
+                </Button>
+              </Link>
+              <Button variant="text" size="sm" onClick={logout} className="text-red-500 hover:text-red-700">
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Link href="/login">
+              <Button variant="primary" size="sm">
+                Sign In
+              </Button>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -46,7 +67,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="px-6 md:px-12 max-w-5xl mx-auto text-center flex flex-col items-center gap-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-nura-rose-medium/30 rounded-full border border-nura-rose-dark/30 text-nura-terracotta text-sm font-semibold tracking-wide uppercase">
-            Sprint 1: Foundation & Architecture Stable
+            Sprint 2: Secure authentication active
           </div>
           
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-nura-slate max-w-4xl leading-tight">
@@ -59,12 +80,24 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
-            <Button variant="primary" size="lg">
-              Explore Our Vision
-            </Button>
-            <Button variant="outline" size="lg">
-              Read the Docs
-            </Button>
+            {user ? (
+              <Link href="/dashboard">
+                <Button variant="primary" size="lg">
+                  Open Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/login">
+                <Button variant="primary" size="lg">
+                  Get Started
+                </Button>
+              </Link>
+            )}
+            <a href="#features">
+              <Button variant="outline" size="lg">
+                Explore Features
+              </Button>
+            </a>
           </div>
         </section>
 
@@ -114,7 +147,7 @@ export default function Home() {
               </div>
               <h3 className="font-display text-xl font-bold text-nura-slate">Mindful Interaction</h3>
               <p className="text-nura-slate/85 leading-relaxed text-sm">
-                Interface styles are optimized for ease-of-use, meeting accessibility targets, and keeping cycle trackers calm and organic instead of alarmist or data-heavy.
+                Interface styles are optimized for ease-of-use, meeting accessibility targets, and keeping cycle trackers calm and organic instead of data-heavy.
               </p>
             </Card>
           </div>
@@ -159,7 +192,7 @@ export default function Home() {
             System Demonstration & Foundations
           </h2>
           <p className="text-nura-slate/75">
-            This landing interface represents the complete Sprint 1 frontend foundation. 
+            This landing interface represents the complete Sprint 2 authentication foundation. 
             All CSS styling uses Tailwind CSS v4, utilizing responsive design systems and clean CSS custom variables.
           </p>
           
@@ -171,10 +204,10 @@ export default function Home() {
               Tailwind CSS v4 (PostCSS)
             </span>
             <span className="px-4 py-1.5 bg-white border border-nura-rose-medium/30 rounded-full text-xs font-semibold text-nura-slate shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              WCAG AA Compliant Contrast
+              Secure HTTP-Only Sessions
             </span>
             <span className="px-4 py-1.5 bg-white border border-nura-rose-medium/30 rounded-full text-xs font-semibold text-nura-slate shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              Java 17 Spring Boot API Core
+              Double-Submit Cookie CSRF
             </span>
           </div>
         </section>

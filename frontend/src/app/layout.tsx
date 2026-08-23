@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
+import { AuthProvider } from "@/context/AuthContext";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -40,9 +41,11 @@ export default function RootLayout({
           Skip to main content
         </a>
         
-        <main id="main-content" className="flex-1 flex flex-col">
-          {children}
-        </main>
+        <AuthProvider>
+          <main id="main-content" className="flex-1 flex flex-col">
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
