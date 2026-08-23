@@ -26,23 +26,21 @@ public class UserController {
     }
 
     public static class OnboardingRequest {
-        @NotNull(message = "Age is required")
         @Min(value = 10, message = "Age must be at least 10")
         @Max(value = 120, message = "Age must be at most 120")
         private Integer age;
 
-        @NotNull(message = "Typical cycle length is required")
         @Min(value = 10, message = "Cycle length must be at least 10 days")
         @Max(value = 100, message = "Cycle length must be at most 100 days")
         private Integer typicalCycleLength;
 
-        @NotNull(message = "Typical period duration is required")
         @Min(value = 1, message = "Period duration must be at least 1 day")
         @Max(value = 20, message = "Period duration must be at most 20 days")
         private Integer typicalPeriodDuration;
 
-        @NotBlank(message = "Timezone is required")
         private String timezone;
+        private String onboardingStatus;
+        private Integer waterGoal;
 
         // Getters and Setters
         public Integer getAge() {
@@ -76,6 +74,22 @@ public class UserController {
         public void setTimezone(String timezone) {
             this.timezone = timezone;
         }
+
+        public String getOnboardingStatus() {
+            return onboardingStatus;
+        }
+
+        public void setOnboardingStatus(String onboardingStatus) {
+            this.onboardingStatus = onboardingStatus;
+        }
+
+        public Integer getWaterGoal() {
+            return waterGoal;
+        }
+
+        public void setWaterGoal(Integer waterGoal) {
+            this.waterGoal = waterGoal;
+        }
     }
 
     @GetMapping("/profile")
@@ -90,6 +104,7 @@ public class UserController {
         response.put("typicalPeriodDuration", profile.getTypicalPeriodDuration());
         response.put("timezone", profile.getTimezone());
         response.put("onboardingStatus", profile.getOnboardingStatus());
+        response.put("waterGoal", profile.getWaterGoal());
         return ResponseEntity.ok(response);
     }
 
@@ -97,12 +112,14 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> updateProfile(@Valid @RequestBody OnboardingRequest request) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         
-        UserProfile profile = userService.completeOnboarding(
+        UserProfile profile = userService.updateProfile(
                 user,
                 request.getAge(),
                 request.getTypicalCycleLength(),
                 request.getTypicalPeriodDuration(),
-                request.getTimezone()
+                request.getTimezone(),
+                request.getOnboardingStatus(),
+                request.getWaterGoal()
         );
 
         Map<String, Object> response = new HashMap<>();
@@ -112,6 +129,7 @@ public class UserController {
         response.put("typicalPeriodDuration", profile.getTypicalPeriodDuration());
         response.put("timezone", profile.getTimezone());
         response.put("onboardingStatus", profile.getOnboardingStatus());
+        response.put("waterGoal", profile.getWaterGoal());
         return ResponseEntity.ok(response);
     }
 }

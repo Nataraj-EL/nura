@@ -33,30 +33,52 @@ public class UserService {
      */
     @Transactional
     public UserProfile completeOnboarding(User user, int age, int typicalCycleLength, int typicalPeriodDuration, String timezone) {
-        if (age < 0 || age > 120) {
-            throw new IllegalArgumentException("Please provide a valid age.");
-        }
-        if (typicalCycleLength < 10 || typicalCycleLength > 100) {
-            throw new IllegalArgumentException("Typical cycle length must be between 10 and 100 days.");
-        }
-        if (typicalPeriodDuration < 1 || typicalPeriodDuration > 20 || typicalPeriodDuration >= typicalCycleLength) {
-            throw new IllegalArgumentException("Typical period duration must be valid and shorter than your cycle length.");
-        }
+        return updateProfile(user, age, typicalCycleLength, typicalPeriodDuration, timezone, "COMPLETED", 2000);
+    }
 
+    /**
+     * Update user profile supporting partial updates and onboarding status transitions.
+     */
+    @Transactional
+    public UserProfile updateProfile(User user, Integer age, Integer typicalCycleLength, Integer typicalPeriodDuration, String timezone, String onboardingStatus, Integer waterGoal) {
         UserProfile profile = userProfileRepository.findByUserId(user.getId())
                 .orElseGet(() -> new UserProfile(user, "PENDING"));
 
-        profile.setAge(age);
-        profile.setTypicalCycleLength(typicalCycleLength);
-        profile.setTypicalPeriodDuration(typicalPeriodDuration);
-        profile.setTimezone(timezone != null ? timezone : "UTC");
-        profile.setOnboardingStatus("COMPLETED");
-        UserProfile savedProfile = userProfileRepository.save(profile);
+        if (age != null) {
+            if (age < 0 || age > 120) {
+                throw new IllegalArgumentException("Please provide a valid age.");
+            }
+            profile.setAge(age);
+        }
+        if (typicalCycleLength != null) {
+            if (typicalCycleLength < 10 || typicalCycleLength > 100) {
+                throw new IllegalArgumentException("Typical cycle length must be between 10 and 100 days.");
+            }
+            profile.setTypicalCycleLength(typicalCycleLength);
+        }
+        if (typicalPeriodDuration != null) {
+            if (typicalPeriodDuration < 1 || typicalPeriodDuration > 20) {
+                throw new IllegalArgumentException("Typical period duration must be valid.");
+            }
+            profile.setTypicalPeriodDuration(typicalPeriodDuration);
+        }
+        if (timezone != null) {
+            profile.setTimezone(timezone);
+        }
+        if (onboardingStatus != null) {
+            profile.setOnboardingStatus(onboardingStatus.toUpperCase());
+            if ("COMPLETED".equalsIgnoreCase(onboardingStatus)) {
+                user.setStatus("ACTIVE");
+                userRepository.save(user);
+            }
+        }
+        if (waterGoal != null) {
+            if (waterGoal < 0 || waterGoal > 20000) {
+                throw new IllegalArgumentException("Water goal must be positive and below 20,000 ml.");
+            }
+            profile.setWaterGoal(waterGoal);
+        }
 
-        // Update User status to ACTIVE
-        user.setStatus("ACTIVE");
-        userRepository.save(user);
-
-        return savedProfile;
+        return userProfileRepository.save(profile);
     }
 }

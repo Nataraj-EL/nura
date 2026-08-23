@@ -28,6 +28,9 @@ public class UserProfile {
     @Column(name = "onboarding_status", nullable = false, length = 30)
     private String onboardingStatus;
 
+    @Column(name = "water_goal", nullable = false)
+    private Integer waterGoal = 2000;
+
     @PrePersist
     protected void onCreate() {
         if (id == null) {
@@ -98,5 +101,13 @@ public class UserProfile {
 
     public void setOnboardingStatus(String onboardingStatus) {
         this.onboardingStatus = onboardingStatus;
+    }
+
+    public Integer getWaterGoal() {
+        return waterGoal;
+    }
+
+    public void setWaterGoal(Integer waterGoal) {
+        this.waterGoal = waterGoal;
     }
 }

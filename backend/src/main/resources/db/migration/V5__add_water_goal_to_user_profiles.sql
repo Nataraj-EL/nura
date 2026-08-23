@@ -1,0 +1,1 @@
+ALTER TABLE user_profiles ADD COLUMN water_goal INTEGER DEFAULT 2000;

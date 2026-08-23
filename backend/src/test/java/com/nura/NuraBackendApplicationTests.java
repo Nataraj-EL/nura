@@ -216,4 +216,61 @@ class NuraBackendApplicationTests {
 						.content("{\"age\": 25, \"typicalCycleLength\": 28, \"typicalPeriodDuration\": 5, \"timezone\": \"UTC\"}"))
 				.andExpect(status().isOk());
 	}
+
+	@Test
+	void testOnboardingResumePartialUpdate() throws Exception {
+		User user = userRepository.save(new User(testPhone, "PENDING_ONBOARDING"));
+		userProfileRepository.save(new UserProfile(user, "PENDING"));
+		userSessionRepository.save(new UserSession("valid-session-token", user, LocalDateTime.now().plusDays(1)));
+
+		// Step 1: Initialize status to IN_PROGRESS
+		mockMvc.perform(put("/api/user/profile")
+						.cookie(new Cookie("nura_session", "valid-session-token"))
+						.with(csrf())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"onboardingStatus\": \"IN_PROGRESS\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.onboardingStatus").value("IN_PROGRESS"))
+				.andExpect(jsonPath("$.waterGoal").value(2000));
+
+		// Step 2: Update water goal and age
+		mockMvc.perform(put("/api/user/profile")
+						.cookie(new Cookie("nura_session", "valid-session-token"))
+						.with(csrf())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"age\": 30, \"waterGoal\": 2500}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.age").value(30))
+				.andExpect(jsonPath("$.waterGoal").value(2500))
+				.andExpect(jsonPath("$.onboardingStatus").value("IN_PROGRESS"));
+
+		// Retrieve profile and verify values are persisted
+		mockMvc.perform(get("/api/user/profile")
+						.cookie(new Cookie("nura_session", "valid-session-token")))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.age").value(30))
+				.andExpect(jsonPath("$.waterGoal").value(2500))
+				.andExpect(jsonPath("$.onboardingStatus").value("IN_PROGRESS"));
+	}
+
+	@Test
+	void testOnboardingCompletion() throws Exception {
+		User user = userRepository.save(new User(testPhone, "PENDING_ONBOARDING"));
+		userProfileRepository.save(new UserProfile(user, "IN_PROGRESS"));
+		userSessionRepository.save(new UserSession("valid-session-token", user, LocalDateTime.now().plusDays(1)));
+
+		// Complete onboarding
+		mockMvc.perform(put("/api/user/profile")
+						.cookie(new Cookie("nura_session", "valid-session-token"))
+						.with(csrf())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"age\": 28, \"typicalCycleLength\": 30, \"typicalPeriodDuration\": 6, \"timezone\": \"Asia/Kolkata\", \"onboardingStatus\": \"COMPLETED\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.onboardingStatus").value("COMPLETED"))
+				.andExpect(jsonPath("$.timezone").value("Asia/Kolkata"));
+
+		// Verify user status is now ACTIVE
+		User updatedUser = userRepository.findById(user.getId()).orElseThrow();
+		assertEquals("ACTIVE", updatedUser.getStatus());
+	}
 }
