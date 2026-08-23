@@ -221,6 +221,16 @@ export const AuthShell: React.FC<{ children: React.ReactNode }> = ({ children })
             >
               Care Center
             </a>
+            <a
+              href="/settings"
+              className={`px-4 py-2 rounded-full font-medium transition-all text-sm ${
+                pathname === "/settings"
+                  ? "bg-nura-rose-medium/30 text-nura-terracotta font-semibold"
+                  : "text-nura-slate/85 hover:bg-nura-rose-light"
+              }`}
+            >
+              Settings
+            </a>
           </nav>
         </div>
 
@@ -302,6 +312,15 @@ export const AuthShell: React.FC<{ children: React.ReactNode }> = ({ children })
         >
           <span className="text-lg">🛡️</span>
           <span>Care</span>
+        </a>
+        <a
+          href="/settings"
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold ${
+            pathname === "/settings" ? "text-nura-terracotta" : "text-nura-slate/50"
+          }`}
+        >
+          <span className="text-lg">⚙️</span>
+          <span>Settings</span>
         </a>
       </nav>
 

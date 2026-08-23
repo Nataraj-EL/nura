@@ -16,4 +16,10 @@ public interface WellnessRecordRepository extends JpaRepository<WellnessRecord, 
             LocalDate fromDate, 
             LocalDate toDate
     );
+
+    List<WellnessRecord> findByUserIdOrderByRecordDateAsc(UUID userId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM WellnessRecord w WHERE w.user.id = :userId")
+    void deleteByUserId(@org.springframework.data.repository.query.Param("userId") UUID userId);
 }

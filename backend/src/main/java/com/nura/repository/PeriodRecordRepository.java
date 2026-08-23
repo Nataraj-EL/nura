@@ -40,4 +40,8 @@ public interface PeriodRecordRepository extends JpaRepository<PeriodRecord, UUID
                                                      @Param("excludeId") UUID excludeId, 
                                                      @Param("startDate") LocalDate startDate, 
                                                      @Param("endDate") LocalDate endDate);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM PeriodRecord p WHERE p.user.id = :userId")
+    void deleteByUserId(@Param("userId") UUID userId);
 }

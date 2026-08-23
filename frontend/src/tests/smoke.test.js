@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const test = require("node:test");
 const assert = require("node:assert");
 
@@ -10,12 +11,13 @@ test("Frontend Smoke Tests - Routing Defaults", () => {
     "/wellness",
     "/insights",
     "/notifications",
-    "/care"
+    "/care",
+    "/settings"
   ];
 
   // Verify all routes are defined in list
-  assert.strictEqual(routes.length, 8);
-  assert.ok(routes.includes("/care"));
+  assert.strictEqual(routes.length, 9);
+  assert.ok(routes.includes("/settings"));
   assert.ok(routes.includes("/dashboard"));
 });
 

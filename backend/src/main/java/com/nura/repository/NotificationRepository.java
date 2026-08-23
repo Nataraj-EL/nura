@@ -28,4 +28,10 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     List<Notification> findPendingDeliverableNotifications(@Param("now") LocalDateTime now);
 
     Optional<Notification> findByUserIdAndCategoryAndRecordDate(UUID userId, String category, LocalDate recordDate);
+
+    List<Notification> findByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM Notification n WHERE n.user.id = :userId")
+    void deleteByUserId(@Param("userId") UUID userId);
 }

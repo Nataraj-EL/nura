@@ -132,4 +132,25 @@ public class UserController {
         response.put("waterGoal", profile.getWaterGoal());
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/export")
+    public ResponseEntity<Map<String, Object>> exportData() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Map<String, Object> export = userService.exportData(user);
+        return ResponseEntity.ok(export);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Map<String, String>> deleteAccount(jakarta.servlet.http.HttpServletResponse httpResponse) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.deleteAccount(user);
+
+        // Invalidate active session cookie by forcing zero age header
+        String cookieHeader = "nura_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax";
+        httpResponse.addHeader("Set-Cookie", cookieHeader);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Account deleted successfully.");
+        return ResponseEntity.ok(response);
+    }
 }
