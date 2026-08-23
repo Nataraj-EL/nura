@@ -77,12 +77,22 @@ export const AuthShell: React.FC<{ children: React.ReactNode }> = ({ children })
             >
               <span>Cycle Log</span>
             </a>
+            <a
+              href="/wellness"
+              className={`px-4 py-2 rounded-full font-medium transition-all text-sm ${
+                pathname === "/wellness"
+                  ? "bg-nura-rose-medium/30 text-nura-terracotta font-semibold"
+                  : "text-nura-slate/85 hover:bg-nura-rose-light"
+              }`}
+            >
+              <span>Wellness Log</span>
+            </a>
             <span
-              title="Coming in Sprint 4"
+              title="Coming in Sprint 6"
               className="px-4 py-2 rounded-full font-medium text-sm text-nura-slate/40 cursor-not-allowed flex items-center justify-between"
             >
               <span>Insights</span>
-              <span className="text-[10px] bg-nura-rose-medium/20 text-nura-terracotta px-1.5 py-0.5 rounded-full uppercase">Sprint 4</span>
+              <span className="text-[10px] bg-nura-rose-medium/20 text-nura-terracotta px-1.5 py-0.5 rounded-full uppercase">Sprint 6</span>
             </span>
           </nav>
         </div>
