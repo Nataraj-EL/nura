@@ -11,8 +11,11 @@ public class User {
     @Id
     private UUID id;
 
-    @Column(name = "phone_number", unique = true, nullable = false, length = 30)
+    @Column(name = "phone_number", unique = true, length = 30)
     private String phoneNumber;
+
+    @Column(name = "email", unique = true)
+    private String email;
 
     @Column(nullable = false, length = 30)
     private String status;
@@ -42,6 +45,12 @@ public class User {
 
     public User(String phoneNumber, String status) {
         this.phoneNumber = phoneNumber;
+        this.status = status;
+    }
+
+    public User(String phoneNumber, String email, String status) {
+        this.phoneNumber = phoneNumber;
+        this.email = email;
         this.status = status;
     }
 
@@ -84,5 +93,13 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

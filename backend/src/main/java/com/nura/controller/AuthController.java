@@ -32,8 +32,8 @@ public class AuthController {
     }
 
     public static class LoginRequest {
-        @NotBlank(message = "Phone number is required")
         private String phoneNumber;
+        private String email;
 
         public String getPhoneNumber() {
             return phoneNumber;
@@ -42,11 +42,19 @@ public class AuthController {
         public void setPhoneNumber(String phoneNumber) {
             this.phoneNumber = phoneNumber;
         }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
     }
 
     public static class VerifyRequest {
-        @NotBlank(message = "Phone number is required")
         private String phoneNumber;
+        private String email;
 
         @NotBlank(message = "Verification code is required")
         private String code;
@@ -57,6 +65,14 @@ public class AuthController {
 
         public void setPhoneNumber(String phoneNumber) {
             this.phoneNumber = phoneNumber;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
         }
 
         public String getCode() {
@@ -70,8 +86,21 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest request) {
-        String normalizedPhone = authService.normalizePhoneNumber(request.getPhoneNumber());
-        authService.requestOtp(normalizedPhone);
+        String email = request.getEmail();
+        String phoneNumber = request.getPhoneNumber();
+
+        if ((email == null || email.trim().isEmpty()) && (phoneNumber == null || phoneNumber.trim().isEmpty())) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Email or phone number is required.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        if (email != null && !email.trim().isEmpty()) {
+            authService.requestOtpForEmail(email.trim().toLowerCase());
+        } else {
+            String normalizedPhone = authService.normalizePhoneNumber(phoneNumber);
+            authService.requestOtp(normalizedPhone);
+        }
         
         Map<String, String> response = new HashMap<>();
         response.put("message", "Verification code sent successfully.");
@@ -82,8 +111,23 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> verify(@Valid @RequestBody VerifyRequest request, 
                                                       HttpServletRequest httpRequest, 
                                                       HttpServletResponse httpResponse) {
-        String normalizedPhone = authService.normalizePhoneNumber(request.getPhoneNumber());
-        UserSession session = authService.verifyOtp(normalizedPhone, request.getCode());
+        String email = request.getEmail();
+        String phoneNumber = request.getPhoneNumber();
+
+        if ((email == null || email.trim().isEmpty()) && (phoneNumber == null || phoneNumber.trim().isEmpty())) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", "Email or phone number is required.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        UserSession session;
+        if (email != null && !email.trim().isEmpty()) {
+            session = authService.verifyOtpForEmail(email.trim().toLowerCase(), request.getCode());
+        } else {
+            String normalizedPhone = authService.normalizePhoneNumber(phoneNumber);
+            session = authService.verifyOtp(normalizedPhone, request.getCode());
+        }
+
         User user = session.getUser();
         
         UserProfile profile = userService.getProfileByUserId(user.getId())
@@ -139,6 +183,7 @@ public class AuthController {
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("phoneNumber", user.getPhoneNumber());
+            response.put("email", user.getEmail());
             response.put("status", user.getStatus());
             response.put("onboardingStatus", profile.getOnboardingStatus());
             return ResponseEntity.ok(response);

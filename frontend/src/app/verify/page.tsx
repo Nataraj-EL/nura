@@ -9,7 +9,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 function VerifyContent() {
   const searchParams = useSearchParams();
   const rawPhone = searchParams.get("phone") || "";
-  const phoneNumber = decodeURIComponent(rawPhone);
+  const rawEmail = searchParams.get("email") || "";
+  const identifier = rawEmail ? decodeURIComponent(rawEmail) : decodeURIComponent(rawPhone);
   
   const [code, setCode] = useState("");
   const [cooldown, setCooldown] = useState(60);
@@ -20,12 +21,12 @@ function VerifyContent() {
   const { verifyOtp, requestOtp, error, clearError } = useAuth();
   const router = useRouter();
 
-  // Redirect if no phone number parameter is found
+  // Redirect if no identifier parameter is found
   useEffect(() => {
-    if (!rawPhone) {
+    if (!rawPhone && !rawEmail) {
       router.push("/login");
     }
-  }, [rawPhone, router]);
+  }, [rawPhone, rawEmail, router]);
 
   // Cooldown timer logic
   useEffect(() => {
@@ -47,7 +48,7 @@ function VerifyContent() {
 
     setIsSubmitting(true);
     try {
-      await verifyOtp(phoneNumber, trimmedCode);
+      await verifyOtp(identifier, trimmedCode);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Invalid code. Please try again.";
       setLocalError(errMsg);
@@ -63,7 +64,7 @@ function VerifyContent() {
     clearError();
     setIsResending(true);
     try {
-      await requestOtp(phoneNumber);
+      await requestOtp(identifier);
       setCooldown(60);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Failed to resend code. Please try again.";
@@ -81,14 +82,16 @@ function VerifyContent() {
             nura
           </span>
           <h1 className="font-display text-xl font-bold text-nura-slate mt-2">
-            Verify Your Number
+            Verify Your Account
           </h1>
           <p className="text-sm text-nura-slate/70">
-            We sent a 6-digit code to <span className="font-semibold">{phoneNumber}</span>.
+            We sent a 6-digit code to <span className="font-semibold">{identifier}</span>.
           </p>
-          <p className="text-xs text-nura-terracotta font-medium bg-nura-rose-medium/20 px-3 py-1 rounded-full self-center">
-            [DEV ONLY] Check backend console logs to view OTP.
-          </p>
+          {process.env.NODE_ENV === "development" && (
+            <p className="text-xs text-nura-terracotta font-medium bg-nura-rose-medium/20 px-3 py-1 rounded-full self-center">
+              [DEV ONLY] Check backend console logs to view OTP.
+            </p>
+          )}
         </div>
 
         {(localError || error) && (

@@ -11,8 +11,11 @@ public class UserOtp {
     @Id
     private UUID id;
 
-    @Column(name = "phone_number", nullable = false, length = 30)
+    @Column(name = "phone_number", length = 30)
     private String phoneNumber;
+
+    @Column(name = "email")
+    private String email;
 
     @Column(name = "hashed_otp", nullable = false, length = 100)
     private String hashedOtp;
@@ -47,6 +50,15 @@ public class UserOtp {
 
     public UserOtp(String phoneNumber, String hashedOtp, LocalDateTime expiresAt) {
         this.phoneNumber = phoneNumber;
+        this.hashedOtp = hashedOtp;
+        this.createdAt = LocalDateTime.now();
+        this.expiresAt = expiresAt;
+        this.attemptCount = 0;
+    }
+
+    public UserOtp(String phoneNumber, String email, String hashedOtp, LocalDateTime expiresAt) {
+        this.phoneNumber = phoneNumber;
+        this.email = email;
         this.hashedOtp = hashedOtp;
         this.createdAt = LocalDateTime.now();
         this.expiresAt = expiresAt;
@@ -108,5 +120,13 @@ public class UserOtp {
 
     public void setAttemptCount(Integer attemptCount) {
         this.attemptCount = attemptCount;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 interface User {
   id: string;
   phoneNumber: string;
+  email?: string;
   status: string;
   onboardingStatus: string;
 }
@@ -43,10 +44,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       const data = await apiRequest("/api/auth/me");
-      if (data && data.phoneNumber) {
+      if (data && (data.phoneNumber || data.email)) {
         setUser({
           id: data.id as string,
           phoneNumber: data.phoneNumber as string,
+          email: data.email as string,
           status: data.status as string,
           onboardingStatus: data.onboardingStatus as string,
         });
@@ -64,12 +66,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const requestOtp = async (phoneNumber: string) => {
+  const requestOtp = async (identifier: string) => {
     try {
       setError(null);
+      const isEmail = identifier.includes("@");
       await apiRequest("/api/auth/login", {
         method: "POST",
-        data: { phoneNumber },
+        data: isEmail ? { email: identifier } : { phoneNumber: identifier },
       });
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Failed to send code. Please try again.";
@@ -78,12 +81,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const verifyOtp = async (phoneNumber: string, code: string) => {
+  const verifyOtp = async (identifier: string, code: string) => {
     try {
       setError(null);
+      const isEmail = identifier.includes("@");
       const data = await apiRequest("/api/auth/verify", {
         method: "POST",
-        data: { phoneNumber, code },
+        data: isEmail ? { email: identifier, code } : { phoneNumber: identifier, code },
       });
 
       if (data) {

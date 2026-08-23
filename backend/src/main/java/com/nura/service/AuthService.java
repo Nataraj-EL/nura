@@ -11,6 +11,7 @@ import com.nura.repository.UserOtpRepository;
 import com.nura.repository.UserProfileRepository;
 import com.nura.repository.UserRepository;
 import com.nura.repository.UserSessionRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,20 +34,29 @@ public class AuthService {
     private final UserSessionRepository userSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final Environment environment;
+    private final OtpDeliveryService otpDeliveryService;
     private final SecureRandom secureRandom = new SecureRandom();
+
+    @Value("${nura.otp.expiry-minutes:5}")
+    private int otpExpiryMinutes;
+
+    @Value("${nura.otp.cooldown-seconds:60}")
+    private int otpCooldownSeconds;
 
     public AuthService(UserRepository userRepository,
                        UserProfileRepository userProfileRepository,
                        UserOtpRepository userOtpRepository,
                        UserSessionRepository userSessionRepository,
                        PasswordEncoder passwordEncoder,
-                       Environment environment) {
+                       Environment environment,
+                       OtpDeliveryService otpDeliveryService) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.userOtpRepository = userOtpRepository;
         this.userSessionRepository = userSessionRepository;
         this.passwordEncoder = passwordEncoder;
         this.environment = environment;
+        this.otpDeliveryService = otpDeliveryService;
     }
 
     /**
@@ -78,12 +88,18 @@ public class AuthService {
      */
     @Transactional
     public void requestOtp(String normalizedPhone) {
-        // Enforce resend cooldown (60 seconds)
+        // Enforce rate limiting: max 5 requests per hour
+        List<UserOtp> recentOtps = userOtpRepository.findByPhoneNumberAndCreatedAtAfter(normalizedPhone, LocalDateTime.now().minusHours(1));
+        if (recentOtps.size() >= 5) {
+            throw new IllegalStateException("Too many verification attempts. Please try again later.");
+        }
+
+        // Enforce resend cooldown
         Optional<UserOtp> latestOtpOpt = userOtpRepository.findTopByPhoneNumberOrderByCreatedAtDesc(normalizedPhone);
         if (latestOtpOpt.isPresent()) {
             UserOtp latestOtp = latestOtpOpt.get();
-            if (latestOtp.getCreatedAt().plusSeconds(60).isAfter(LocalDateTime.now())) {
-                throw new IllegalStateException("Please wait 60 seconds before requesting another verification code.");
+            if (latestOtp.getCreatedAt().plusSeconds(otpCooldownSeconds).isAfter(LocalDateTime.now())) {
+                throw new IllegalStateException("Please wait before requesting another verification code.");
             }
         }
 
@@ -107,7 +123,54 @@ public class AuthService {
 
         // Hash the OTP and store
         String hashedOtp = passwordEncoder.encode(rawOtp);
-        UserOtp userOtp = new UserOtp(normalizedPhone, hashedOtp, LocalDateTime.now().plusMinutes(5));
+        UserOtp userOtp = new UserOtp(normalizedPhone, hashedOtp, LocalDateTime.now().plusMinutes(otpExpiryMinutes));
+        userOtpRepository.save(userOtp);
+    }
+
+    /**
+     * Request a new OTP for the email recipient.
+     */
+    @Transactional
+    public void requestOtpForEmail(String email) {
+        // Enforce rate limiting: max 5 requests per hour
+        List<UserOtp> recentOtps = userOtpRepository.findByEmailAndCreatedAtAfter(email, LocalDateTime.now().minusHours(1));
+        if (recentOtps.size() >= 5) {
+            throw new IllegalStateException("Too many verification attempts. Please try again later.");
+        }
+
+        // Enforce resend cooldown
+        Optional<UserOtp> latestOtpOpt = userOtpRepository.findTopByEmailOrderByCreatedAtDesc(email);
+        if (latestOtpOpt.isPresent()) {
+            UserOtp latestOtp = latestOtpOpt.get();
+            if (latestOtp.getCreatedAt().plusSeconds(otpCooldownSeconds).isAfter(LocalDateTime.now())) {
+                throw new IllegalStateException("Please wait before requesting another verification code.");
+            }
+        }
+
+        // Invalidate previous active OTPs for this email
+        List<UserOtp> activeOtps = userOtpRepository.findByEmailAndConsumedAtIsNullAndExpiresAtAfter(email, LocalDateTime.now());
+        for (UserOtp activeOtp : activeOtps) {
+            activeOtp.setExpiresAt(LocalDateTime.now()); // Expire immediately
+            userOtpRepository.save(activeOtp);
+        }
+
+        // Generate a cryptographically secure random 6-digit OTP
+        int code = 100000 + secureRandom.nextInt(900000);
+        String rawOtp = String.valueOf(code);
+
+        // Print to console strictly if running under dev environment
+        if (Arrays.asList(environment.getActiveProfiles()).contains("dev")) {
+            System.out.println("\n--- [DEV ONLY - FOR DEMO] ---");
+            System.out.println("OTP code for " + email + " is: " + rawOtp);
+            System.out.println("-----------------------------\n");
+        }
+
+        // Send real OTP if configured
+        otpDeliveryService.sendOtp(email, rawOtp);
+
+        // Hash the OTP and store
+        String hashedOtp = passwordEncoder.encode(rawOtp);
+        UserOtp userOtp = new UserOtp(null, email, hashedOtp, LocalDateTime.now().plusMinutes(otpExpiryMinutes));
         userOtpRepository.save(userOtp);
     }
 
@@ -151,7 +214,7 @@ public class AuthService {
                 userOtpRepository.save(userOtp);
                 throw new IllegalArgumentException("Maximum verification attempts exceeded. Please request a new code.");
             }
-            throw new IllegalArgumentException("Invalid verification code. Please try again.");
+            throw new IllegalArgumentException("Invalid verification code. Please check and try again.");
         }
 
         // Invalidate OTP after success
@@ -163,6 +226,74 @@ public class AuthService {
         User user = userRepository.findByPhoneNumber(normalizedPhone)
                 .orElseGet(() -> {
                     User newUser = new User(normalizedPhone, "PENDING_ONBOARDING");
+                    User savedUser = userRepository.save(newUser);
+                    
+                    // Create default profile mapping
+                    UserProfile profile = new UserProfile(savedUser, "PENDING");
+                    userProfileRepository.save(profile);
+                    
+                    return savedUser;
+                });
+
+        // Create secure session token
+        byte[] randomBytes = new byte[32];
+        secureRandom.nextBytes(randomBytes);
+        String sessionToken = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+
+        // Expiration (7 days)
+        LocalDateTime expiresAt = LocalDateTime.now().plusDays(7);
+        UserSession session = new UserSession(sessionToken, user, expiresAt);
+        
+        return userSessionRepository.save(session);
+    }
+
+    /**
+     * Verify the OTP code for email and return an authenticated UserSession.
+     */
+    @Transactional
+    public UserSession verifyOtpForEmail(String email, String rawOtp) {
+        Optional<UserOtp> latestOtpOpt = userOtpRepository.findTopByEmailOrderByCreatedAtDesc(email);
+        if (latestOtpOpt.isEmpty()) {
+            throw new IllegalArgumentException("Invalid verification code. Please check and try again.");
+        }
+
+        UserOtp userOtp = latestOtpOpt.get();
+
+        // Check if expired or consumed
+        if (userOtp.getExpiresAt().isBefore(LocalDateTime.now()) || userOtp.getConsumedAt() != null) {
+            throw new IllegalArgumentException("Invalid verification code. Please check and try again.");
+        }
+
+        // Check if attempt count is exceeded
+        if (userOtp.getAttemptCount() >= 3) {
+            userOtp.setExpiresAt(LocalDateTime.now()); // Invalidate OTP
+            userOtpRepository.save(userOtp);
+            throw new IllegalArgumentException("Maximum verification attempts exceeded. Please request a new code.");
+        }
+
+        // Increment attempts
+        userOtp.setAttemptCount(userOtp.getAttemptCount() + 1);
+        userOtpRepository.save(userOtp);
+
+        // Compare OTP
+        if (!passwordEncoder.matches(rawOtp, userOtp.getHashedOtp())) {
+            if (userOtp.getAttemptCount() >= 3) {
+                userOtp.setExpiresAt(LocalDateTime.now()); // Invalidate OTP
+                userOtpRepository.save(userOtp);
+                throw new IllegalArgumentException("Maximum verification attempts exceeded. Please request a new code.");
+            }
+            throw new IllegalArgumentException("Invalid verification code. Please check and try again.");
+        }
+
+        // Invalidate OTP after success
+        userOtp.setConsumedAt(LocalDateTime.now());
+        userOtp.setExpiresAt(LocalDateTime.now()); // Double secure invalidation
+        userOtpRepository.save(userOtp);
+
+        // Find or create User
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    User newUser = new User(null, email, "PENDING_ONBOARDING");
                     User savedUser = userRepository.save(newUser);
                     
                     // Create default profile mapping
