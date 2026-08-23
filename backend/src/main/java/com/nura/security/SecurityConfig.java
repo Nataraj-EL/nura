@@ -26,11 +26,14 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final UserSessionRepository sessionRepository;
+    private final RequestCorrelationFilter requestCorrelationFilter;
     private final String allowedOrigins;
 
     public SecurityConfig(UserSessionRepository sessionRepository,
+                          RequestCorrelationFilter requestCorrelationFilter,
                           @Value("${nura.cors.allowed-origins:http://localhost:3000}") String allowedOrigins) {
         this.sessionRepository = sessionRepository;
+        this.requestCorrelationFilter = requestCorrelationFilter;
         this.allowedOrigins = allowedOrigins;
     }
 
@@ -64,6 +67,7 @@ public class SecurityConfig {
                 .frameOptions(frame -> frame.deny())
                 .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'none';"))
             )
+            .addFilterBefore(requestCorrelationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new TokenAuthenticationFilter(sessionRepository), UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
             .authorizeHttpRequests(auth -> auth
