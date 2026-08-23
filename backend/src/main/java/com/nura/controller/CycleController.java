@@ -5,6 +5,7 @@ import com.nura.model.PeriodRecord;
 import com.nura.model.User;
 import com.nura.service.CycleService;
 import com.nura.service.PeriodRecordService;
+import com.nura.service.CyclePhaseService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,10 +23,14 @@ public class CycleController {
 
     private final PeriodRecordService periodRecordService;
     private final CycleService cycleService;
+    private final CyclePhaseService cyclePhaseService;
 
-    public CycleController(PeriodRecordService periodRecordService, CycleService cycleService) {
+    public CycleController(PeriodRecordService periodRecordService, 
+                           CycleService cycleService,
+                           CyclePhaseService cyclePhaseService) {
         this.periodRecordService = periodRecordService;
         this.cycleService = cycleService;
+        this.cyclePhaseService = cyclePhaseService;
     }
 
     private User getAuthenticatedUser() {
@@ -96,5 +101,12 @@ public class CycleController {
         User user = getAuthenticatedUser();
         Map<String, Object> state = cycleService.getCurrentCycleState(user);
         return ResponseEntity.ok(state);
+    }
+
+    @GetMapping("/phase")
+    public ResponseEntity<Map<String, Object>> getCyclePhase() {
+        User user = getAuthenticatedUser();
+        Map<String, Object> phaseState = cyclePhaseService.calculateCyclePhase(user);
+        return ResponseEntity.ok(phaseState);
     }
 }
