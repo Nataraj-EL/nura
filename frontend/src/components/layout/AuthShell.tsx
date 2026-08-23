@@ -211,6 +211,16 @@ export const AuthShell: React.FC<{ children: React.ReactNode }> = ({ children })
             >
               Insights
             </a>
+            <a
+              href="/care"
+              className={`px-4 py-2 rounded-full font-medium transition-all text-sm ${
+                pathname === "/care"
+                  ? "bg-nura-rose-medium/30 text-nura-terracotta font-semibold"
+                  : "text-nura-slate/85 hover:bg-nura-rose-light"
+              }`}
+            >
+              Care Center
+            </a>
           </nav>
         </div>
 
@@ -283,6 +293,15 @@ export const AuthShell: React.FC<{ children: React.ReactNode }> = ({ children })
         >
           <span className="text-lg">📈</span>
           <span>Insights</span>
+        </a>
+        <a
+          href="/care"
+          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold ${
+            pathname === "/care" ? "text-nura-terracotta" : "text-nura-slate/50"
+          }`}
+        >
+          <span className="text-lg">🛡️</span>
+          <span>Care</span>
         </a>
       </nav>
 
