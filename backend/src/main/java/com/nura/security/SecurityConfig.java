@@ -2,6 +2,7 @@ package com.nura.security;
 
 import com.nura.repository.UserSessionRepository;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,9 +26,12 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final UserSessionRepository sessionRepository;
+    private final String allowedOrigins;
 
-    public SecurityConfig(UserSessionRepository sessionRepository) {
+    public SecurityConfig(UserSessionRepository sessionRepository,
+                          @Value("${nura.cors.allowed-origins:http://localhost:3000}") String allowedOrigins) {
         this.sessionRepository = sessionRepository;
+        this.allowedOrigins = allowedOrigins;
     }
 
     @Bean
@@ -56,6 +60,10 @@ public class SecurityConfig {
                     response.getWriter().write("{\"error\": \"Unauthorized access. Verification required.\"}");
                 })
             )
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.deny())
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; frame-ancestors 'none';"))
+            )
             .addFilterBefore(new TokenAuthenticationFilter(sessionRepository), UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
             .authorizeHttpRequests(auth -> auth
@@ -69,7 +77,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-XSRF-TOKEN", "Cache-Control", "Pragma"));
         configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));

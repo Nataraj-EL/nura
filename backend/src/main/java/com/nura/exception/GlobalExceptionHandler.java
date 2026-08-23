@@ -1,5 +1,7 @@
 package com.nura.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,6 +15,8 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -42,9 +46,8 @@ public class GlobalExceptionHandler {
         Map<String, String> response = new HashMap<>();
         response.put("error", "An unexpected error occurred. Please try again later.");
         
-        // Log the exception locally on server, never leak details to front-end client
-        System.err.println("[SERVER ERROR]: " + ex.getMessage());
-        ex.printStackTrace();
+        // Log the exception locally using SLF4J, never leak details to front-end client
+        logger.error("An unexpected error occurred: ", ex);
         
         return ResponseEntity.internalServerError().body(response);
     }
