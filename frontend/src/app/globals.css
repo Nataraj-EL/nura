@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  /* Wellness Theme Palette */
+  --color-nura-terracotta: #d9745b;
+  --color-nura-rose-dark: #e0a396;
+  --color-nura-rose-light: #fdf5f3;
+  --color-nura-rose-medium: #f2ccc3;
+  --color-nura-sage: #81b29a;
+  --color-nura-sage-light: #f0f6f3;
+  --color-nura-slate: #3d405b;
+  --color-nura-cream: #fbf8f3;
+  
+  /* Semantic Brand Names */
+  --color-brand-primary: var(--color-nura-terracotta);
+  --color-brand-secondary: var(--color-nura-slate);
+  --color-brand-accent: var(--color-nura-sage);
+  --color-brand-bg: var(--color-nura-cream);
+  
+  /* Font Family Overrides */
+  --font-display: "Outfit", var(--font-sans);
+}
+
+/* Custom base adjustments */
+:root {
+  --background: var(--color-nura-cream);
+  --foreground: var(--color-nura-slate);
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Modern Accessible Focus States */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--color-nura-terracotta);
+  outline-offset: 2px;
+}
+
+/* Scrollbar Customization for Premium Aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-nura-rose-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-nura-rose-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-nura-terracotta);
+}
+
+/* Glassmorphism helpers using standard Tailwind utilities */
+.glass-panel {
+  background-color: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
