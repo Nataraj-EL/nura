@@ -39,9 +39,9 @@ public class EmailOtpDeliveryService implements OtpDeliveryService {
             helper.setText("Your Nura verification code is: " + otp + "\n\nThis code will expire shortly. Do not share it with anyone.");
 
             mailSender.send(message);
-            logger.info("Successfully sent OTP email to: {}", recipient);
+            logger.info("Successfully sent OTP email.");
         } catch (Exception e) {
-            logger.error("Failed to send OTP email to {}: {}", recipient, e.getMessage(), e);
+            logger.error("Failed to send OTP email: {}", e.getMessage());
             throw new RuntimeException("Email delivery failed.");
         }
     }

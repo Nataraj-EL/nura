@@ -155,4 +155,32 @@ public class EmailOtpTests {
                 () -> authService.verifyOtpForEmail(testEmail, testCode));
         assertEquals("Invalid verification code. Please check and try again.", ex.getMessage());
     }
+
+    @Autowired
+    private com.nura.repository.UserSessionRepository userSessionRepository;
+
+    @Test
+    void testSessionLogoutAndInvalidation() {
+        authService.requestOtpForEmail(testEmail);
+        Optional<UserOtp> otpOpt = userOtpRepository.findTopByEmailOrderByCreatedAtDesc(testEmail);
+        assertTrue(otpOpt.isPresent());
+
+        String testCode = "999999";
+        UserOtp storedOtp = otpOpt.get();
+        storedOtp.setHashedOtp(passwordEncoder.encode(testCode));
+        userOtpRepository.save(storedOtp);
+
+        UserSession session = authService.verifyOtpForEmail(testEmail, testCode);
+        assertNotNull(session);
+        String token = session.getToken();
+
+        // Verify session exists
+        assertTrue(userSessionRepository.findByToken(token).isPresent());
+
+        // Call revokeSession (Logout simulation)
+        authService.revokeSession(token);
+
+        // Verify session is invalidated and deleted
+        assertFalse(userSessionRepository.findByToken(token).isPresent());
+    }
 }

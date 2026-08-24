@@ -33,6 +33,12 @@ services:
       DB_USER: nura
       DB_PASSWORD: nura
       CORS_ALLOWED_ORIGINS: http://localhost:3000
+      SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Nura}
     depends_on:
       db:
         condition: service_healthy

@@ -26,6 +26,9 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
+    @org.springframework.beans.factory.annotation.Value("${nura.cookie.secure:false}")
+    private boolean cookieSecure;
+
     public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
         this.userService = userService;
@@ -134,9 +137,8 @@ public class AuthController {
                 .orElseThrow(() -> new IllegalStateException("User profile missing."));
 
         // Format Secure Cookie Header with SameSite=Lax support
-        boolean secureFlag = httpRequest.isSecure();
         String cookieHeader = String.format("nura_session=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax%s", 
-                session.getToken(), 7 * 24 * 60 * 60, secureFlag ? "; Secure" : "");
+                session.getToken(), 7 * 24 * 60 * 60, (cookieSecure || httpRequest.isSecure()) ? "; Secure" : "");
         httpResponse.addHeader("Set-Cookie", cookieHeader);
 
         Map<String, Object> response = new HashMap<>();
@@ -163,7 +165,8 @@ public class AuthController {
         }
 
         // Overwrite and delete cookie on client
-        String cookieHeader = "nura_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax";
+        String cookieHeader = String.format("nura_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax%s", 
+                (cookieSecure || httpRequest.isSecure()) ? "; Secure" : "");
         httpResponse.addHeader("Set-Cookie", cookieHeader);
 
         Map<String, String> response = new HashMap<>();
