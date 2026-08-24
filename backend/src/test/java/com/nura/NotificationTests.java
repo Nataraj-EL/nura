@@ -70,6 +70,17 @@ class NotificationTests {
 
         secondaryUser = userRepository.save(new User("+919000000009", "ACTIVE"));
         userProfileRepository.save(new UserProfile(secondaryUser, "COMPLETED"));
+
+        // Disable quiet hours by default in tests to prevent flaky time-of-day failures
+        NotificationPreference primPref = notificationService.getOrCreatePreference(primaryUser);
+        primPref.setQuietHoursStart(null);
+        primPref.setQuietHoursEnd(null);
+        notificationPreferenceRepository.save(primPref);
+
+        NotificationPreference secPref = notificationService.getOrCreatePreference(secondaryUser);
+        secPref.setQuietHoursStart(null);
+        secPref.setQuietHoursEnd(null);
+        notificationPreferenceRepository.save(secPref);
     }
 
     @Test
