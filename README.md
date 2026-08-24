@@ -1,120 +1,144 @@
 # Nura — Wellness & Menstrual Cycle Companion
 
-Nura is a privacy-first menstrual cycle and wellness companion. It is designed to empower users with tracking and insights while keeping their personal health data secure and local by design.
+Nura is a privacy-first menstrual cycle and wellness companion. It is designed to empower users with cycle tracking and insights while keeping their personal health data secure and local by design.
 
 ---
 
-## Architecture
+## Production Deployment Architecture
 
-Nura uses a decoupled client-server architecture inside a monorepo structure:
-- **Frontend**: A highly responsive, mobile-first Next.js web application built with TypeScript and styled using Tailwind CSS v4.
-- **Backend**: A robust REST API built with Java 17 and Spring Boot.
-- **Database**: PostgreSQL (to be integrated in a later sprint).
+In production, Nura is deployed as a fully containerized stack managed via Docker or Kubernetes. The architecture consists of four primary components running inside a private Docker bridge network:
 
 ```
-nura/
-├── frontend/             # Next.js & TypeScript client app
-├── backend/              # Spring Boot & Java API application
-├── .gitignore            # Git exclusions for both frontend and backend
-└── README.md             # This file
+                  ┌───────────────────────┐
+                  │      User Browser     │
+                  └───────────┬───────────┘
+                              │ HTTPS (:443)
+                              ▼
+                  ┌───────────────────────┐
+                  │   Nginx Proxy Port    │
+                  └───────────┬───────────┘
+                              │
+             ┌────────────────┴────────────────┐
+             │ /api/ or /actuator/             │ / (all other routes)
+             ▼                                 ▼
+   ┌───────────────────┐             ┌───────────────────┐
+   │  Spring Boot API  │             │ Next.js Frontend  │
+   │  Container (:8080)│             │  Container (:3000)│
+   └─────────┬─────────┘             └───────────────────┘
+             │
+             ▼
+   ┌───────────────────┐
+   │ PostgreSQL DB 15  │
+   │  Container (:5432)│
+   └───────────────────┘
 ```
+
+1. **`nura-proxy` (Nginx Alpine)**: The single entrypoint for ingress traffic. Listens on ports `80` (redirects to HTTPS) and `443` (terminates SSL/TLS). Manages secure headers (HSTS, CSP, X-Frame-Options) and forwards paths to upstream containers.
+2. **`frontend` (Next.js Node 20)**: Serves static assets and compiled React layouts on port `3000`. Runs under a non-root user (`nextjs`) for enhanced container safety.
+3. **`backend` (Spring Boot JRE 17)**: Handles the REST API, rate limits, OTP verification, and JWT session issuing on port `8080`.
+4. **`nura-db` (PostgreSQL 15)**: Persists user-profiles, cycle logging data, and session tables using persistent Docker volume maps.
 
 ---
 
-## Tech Stack
+## Required Environment Variables
 
-### Frontend
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4 (CSS-first configuration)
-- **Linting & Formatting**: ESLint & Prettier
+All secrets, credentials, and parameters must be configured via environment variables. Do *never* hardcode or commit them to the repository. Use a secure `.env` file mapped at the root directory:
 
-### Backend
-- **Framework**: Spring Boot (Java 17)
-- **Build Tool**: Maven
-- **Observability**: Spring Boot Actuator
+| Environment Variable | Description | Example / Fallback |
+| :--- | :--- | :--- |
+| `SPRING_PROFILES_ACTIVE` | Configures the Spring execution environment. | `prod` (production) / `dev` |
+| `DB_HOST` | Hostname of the PostgreSQL service container. | `nura-db` |
+| `DB_PORT` | Execution port of the PostgreSQL database. | `5432` |
+| `DB_NAME` | Database identifier schema name. | `nura` |
+| `DB_USER` | Access username of the database schema. | `nura` |
+| `DB_PASSWORD` | Encrypted password string. | `nura` |
+| `CORS_ALLOWED_ORIGINS` | Restricts API requests to verified frontend domains. | `https://localhost` |
+| `NEXT_PUBLIC_API_URL` | Base URL of the API client inside browser. | `https://localhost` |
+| `SMTP_HOST` | SMTP server endpoint domain. | `smtp-relay.brevo.com` |
+| `SMTP_PORT` | Delivery protocol port. | `587` |
+| `SMTP_USERNAME` | SMTP account login identifier. | *(e.g. `user@smtp-brevo.com`)* |
+| `SMTP_PASSWORD` | SMTP authentication keys or tokens. | *(Brevo SMTP API key)* |
+| `SMTP_FROM_EMAIL` | Verified sender email address. | *(e.g. `sender@gmail.com`)* |
+| `SMTP_FROM_NAME` | Display name of the email sender. | `Nura` |
+| `OTP_EXPIRY_MINUTES` | Lifecycle bounds of valid OTP codes. | `5` |
+| `OTP_COOLDOWN_SECONDS`| Delay interval required between OTP resends. | `60` |
 
 ---
 
 ## Getting Started
 
-### Prerequisites
-- **Node.js** (v18.x or later)
-- **Java JDK** 17
-- **Maven** 3.9+
-- **Git**
+### Local Production Setup (Localhost HTTPS Testing)
+
+#### 1. Generate SSL Certificates
+To test the full HTTPS and proxy pipeline locally, generate a self-signed SSL certificate:
+```bash
+./nginx/generate-certs.sh
+```
+This generates `nura.crt` and `nura.key` inside the `nginx/certs/` folder.
+
+#### 2. Start the Stack (Docker Compose / Runner)
+If Docker Compose is installed:
+```bash
+docker compose up -d --build
+```
+On environments where `docker compose` CLI is unavailable, run the customized runner script:
+```bash
+./prod-run.sh
+```
+This script creates a private network, starts the database, builds the production Java and Node images, and executes Nginx proxy routing locally.
+
+To stop and clean up containers:
+```bash
+./prod-stop.sh
+```
 
 ---
 
-### Frontend Setup
+## Database Operations
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Copy the environment configuration:
-   ```bash
-   cp .env.example .env.local
-   ```
-   *(Note: Modify `.env.local` to fit your local development environment. Do not commit `.env.local` to git.)*
-4. Run the local development server:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+### 1. Auto-Migrations
+Database schemas are automatically maintained via Flyway. When the `backend` container starts, it will auto-run SQL scripts in `backend/src/main/resources/db/migration` prior to starting the web listener.
+
+### 2. Manual Backup
+To backup the production PostgreSQL database:
+```bash
+docker exec -t nura-db pg_dump -U nura -d nura > nura_backup_$(date +%F).sql
+```
+
+### 3. Restore / Rollback
+To restore a backup:
+1. Drop current tables or spin up an empty container.
+2. Load the SQL file:
+```bash
+cat nura_backup_XXXX.sql | docker exec -i nura-db psql -U nura -d nura
+```
 
 ---
 
-### Backend Setup
+## Production Health Checks
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Compile and package the application:
-   ```bash
-   ./mvnw clean compile
-   ```
-3. Run the Spring Boot application:
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-   The backend will start on [http://localhost:8080](http://localhost:8080).
-4. Verify server health:
-   ```bash
-   curl http://localhost:8080/actuator/health
-   ```
+### Actuator Monitoring
+Exposed health probes check critical subsystem readiness:
+- **Liveness Probe**: `https://localhost/actuator/health/liveness` (Returns `{"status": "UP"}` if JVM is alive).
+- **Readiness Probe**: `https://localhost/actuator/health/readiness` (Returns `{"status": "UP"}` if DB connection is active and ready).
 
 ---
 
-## Development Commands
+## Production Smoke-Test Checklist
 
-| Directory | Command | Description |
-| :--- | :--- | :--- |
-| **frontend/** | `npm run dev` | Starts the React/Next.js dev server at port 3000. |
-| **frontend/** | `npm run build` | Compiles the frontend for production. |
-| **frontend/** | `npm run lint` | Runs ESLint check across source code files. |
-| **backend/** | `./mvnw spring-boot:run` | Starts the Spring Boot API at port 8080. |
-| **backend/** | `./mvnw clean compile` | Cleans and compiles the backend Java source. |
-| **backend/** | `./mvnw clean test` | Runs backend unit and integration tests. |
+After launching the production deployment, verify these checklist items:
 
----
-
-## Git Workflow
-
-For development updates:
-1. Ensure your local branch is up-to-date:
-   ```bash
-   git pull origin main
-   ```
-2. Implement features or sprint goals locally.
-3. Test your changes locally (ensure linting and compiles succeed).
-4. Commit your changes using descriptive commit messages (e.g. `feat(sprint-1): establish project foundation`).
-5. Push to the remote repository:
-   ```bash
-   git push origin main
-   ```
+1. **SSL & Ingress Routing**:
+   - [ ] Verify that opening `http://localhost` redirects to `https://localhost`.
+   - [ ] Verify that the self-signed certificate warning loads and can be bypassed for testing.
+2. **Health Endpoints**:
+   - [ ] Curl `https://localhost/actuator/health` and verify the database status is `UP`.
+   - [ ] Verify that the header `X-Correlation-ID` is present on all actuator responses.
+3. **Authentication Flow (Brevo SMTP)**:
+   - [ ] Request a verification code at `https://localhost/login` with a valid email.
+   - [ ] Check your Brevo mailbox and verify the OTP delivers within 1 minute.
+   - [ ] Submit the correct 6-digit code. Verify that you are redirected to the dashboard.
+   - [ ] Inspect browser cookies for `nura_session`. Verify it contains the `Secure; HttpOnly; SameSite=Lax` parameters.
+4. **Logout Invalidation**:
+   - [ ] Perform a logout at `https://localhost/settings` or via navigation controls.
+   - [ ] Confirm that `nura_session` cookie is cleared and the session is deleted from the backend.

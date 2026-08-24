@@ -19,7 +19,7 @@ RUN addgroup -S nura && adduser -S nura -G nura
 USER nura
 
 # Copy built JAR from build stage
-COPY --from=build --chown=nura:nura /app/target/nura-backend-*.jar app.jar
+COPY --from=build --chown=nura:nura /app/target/backend-*.jar app.jar
 
 # Expose server port
 EXPOSE 8080

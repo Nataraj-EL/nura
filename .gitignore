@@ -53,3 +53,7 @@ Thumbs.db
 
 # Maven wrapper jar (re-downloaded automatically or kept for offline depending on preference, standard is to ignore wrapper jar or keep it, we keep wrapper scripts but ignore the binary jar)
 .mvn/wrapper/maven-wrapper.jar
+
+# SSL certificates for local testing
+nginx/certs/
+
