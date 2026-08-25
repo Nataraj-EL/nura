@@ -14,8 +14,8 @@ RUN mvn package -DskipTests -B
 FROM eclipse-temurin:17-jre-alpine AS run
 WORKDIR /app
 
-# Add non-root system user for runtime security
-RUN addgroup -S nura && adduser -S nura -G nura
+# Add curl for healthcheck and non-root system user for runtime security
+RUN apk add --no-cache curl && addgroup -S nura && adduser -S nura -G nura
 USER nura
 
 # Copy built JAR from build stage

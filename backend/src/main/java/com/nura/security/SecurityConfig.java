@@ -71,7 +71,7 @@ public class SecurityConfig {
             .addFilterBefore(new TokenAuthenticationFilter(sessionRepository), UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login", "/api/auth/verify", "/api/auth/logout", "/actuator/health", "/actuator/health/**").permitAll()
+                .requestMatchers("/error", "/api/auth/login", "/api/auth/verify", "/api/auth/logout", "/actuator/health", "/actuator/health/**").permitAll()
                 .anyRequest().authenticated()
             );
 

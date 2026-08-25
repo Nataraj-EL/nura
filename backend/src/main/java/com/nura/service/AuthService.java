@@ -177,7 +177,7 @@ public class AuthService {
     /**
      * Verify the OTP code and return an authenticated UserSession.
      */
-    @Transactional
+    @Transactional(noRollbackFor = IllegalArgumentException.class)
     public UserSession verifyOtp(String normalizedPhone, String rawOtp) {
         Optional<UserOtp> latestOtpOpt = userOtpRepository.findTopByPhoneNumberOrderByCreatedAtDesc(normalizedPhone);
         if (latestOtpOpt.isEmpty()) {
@@ -250,7 +250,7 @@ public class AuthService {
     /**
      * Verify the OTP code for email and return an authenticated UserSession.
      */
-    @Transactional
+    @Transactional(noRollbackFor = IllegalArgumentException.class)
     public UserSession verifyOtpForEmail(String email, String rawOtp) {
         Optional<UserOtp> latestOtpOpt = userOtpRepository.findTopByEmailOrderByCreatedAtDesc(email);
         if (latestOtpOpt.isEmpty()) {
