@@ -9,6 +9,7 @@ import Link from "next/link";
 export default function Home() {
   const { user, logout } = useAuth();
 
+
   return (
     <div className="min-h-screen flex flex-col justify-between bg-nura-cream">
       {/* Header Navigation */}
@@ -67,7 +68,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="px-6 md:px-12 max-w-5xl mx-auto text-center flex flex-col items-center gap-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-nura-rose-medium/30 rounded-full border border-nura-rose-dark/30 text-nura-terracotta text-sm font-semibold tracking-wide uppercase">
-            Sprint 2: Secure authentication active
+            Private Wellness Companion
           </div>
           
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-nura-slate max-w-4xl leading-tight">
@@ -105,10 +106,10 @@ export default function Home() {
         <section id="features" className="px-6 md:px-12 max-w-6xl mx-auto w-full flex flex-col gap-12">
           <div className="text-center flex flex-col gap-2">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-nura-slate">
-              Our Core Design Principles
+              Designed for Mindful Wellness
             </h2>
             <p className="text-base md:text-lg text-nura-slate/75 max-w-xl mx-auto">
-              How we are building a companion that sets a new standard for wellness applications.
+              Tracking your body rhythm should be calm, direct, and completely private.
             </p>
           </div>
 
@@ -132,9 +133,9 @@ export default function Home() {
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
               </div>
-              <h3 className="font-display text-xl font-bold text-nura-slate">Modular Framework</h3>
+              <h3 className="font-display text-xl font-bold text-nura-slate">Simple Daily Logs</h3>
               <p className="text-nura-slate/85 leading-relaxed text-sm">
-                Built on Next.js 15 App Router and a robust Spring Boot backend architecture, enabling frictionless extensions for future sprints.
+                Log your daily hydration, sleep hours, mood, energy, and physical symptoms in a beautiful, distraction-free environment that centers your well-being.
               </p>
             </Card>
 
@@ -145,9 +146,9 @@ export default function Home() {
                   <path d="M12 8v4l3 3" />
                 </svg>
               </div>
-              <h3 className="font-display text-xl font-bold text-nura-slate">Mindful Interaction</h3>
+              <h3 className="font-display text-xl font-bold text-nura-slate">Calm Layouts</h3>
               <p className="text-nura-slate/85 leading-relaxed text-sm">
-                Interface styles are optimized for ease-of-use, meeting accessibility targets, and keeping cycle trackers calm and organic instead of data-heavy.
+                Enjoy an interface optimized for clarity and ease-of-use, custom-tailored to help you note observations without clutter or clinical noise.
               </p>
             </Card>
           </div>
@@ -161,10 +162,7 @@ export default function Home() {
                 Empowering body literacy through transparent design.
               </h2>
               <p className="text-nura-slate/80 leading-relaxed">
-                Nura is designed to help you map, understand, and learn the rhythms of your cycle without feeling pathologized. We combine beautiful typography, accessible designs, and high-performance server interactions to provide a calm wellness environment.
-              </p>
-              <p className="text-nura-slate/80 leading-relaxed font-medium">
-                Our upcoming Sprint features will introduce local wellness logs, zero-knowledge sync modules, and robust analytical layouts.
+                Nura is designed to help you map, understand, and learn the rhythms of your cycle without feeling pathologized. We combine beautiful, calm typography with secure local data parameters to protect your daily observations.
               </p>
             </div>
             
@@ -176,9 +174,9 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-display font-semibold text-lg text-nura-slate">Zero Data Collected</h4>
+                  <h4 className="font-display font-semibold text-lg text-nura-slate">Zero Data Selling</h4>
                   <p className="text-sm text-nura-slate/70 mt-1">
-                    Your personal physical symptoms, cycles, and history are encrypted locally on your machine. We do not have access to it, ever.
+                    Your personal physical symptoms, cycles, and history are saved securely on your device. We do not have access to it, ever.
                   </p>
                 </div>
               </Card>
@@ -189,25 +187,24 @@ export default function Home() {
         {/* Current State / About Section */}
         <section id="about" className="px-6 md:px-12 max-w-4xl mx-auto w-full flex flex-col gap-6 text-center">
           <h2 className="font-display text-2xl font-bold text-nura-slate">
-            System Demonstration & Foundations
+            Built on Trust and Transparency
           </h2>
           <p className="text-nura-slate/75">
-            This landing interface represents the complete Sprint 2 authentication foundation. 
-            All CSS styling uses Tailwind CSS v4, utilizing responsive design systems and clean CSS custom variables.
+            Nura is an open-source, privacy-first platform. All your physical data is saved securely in your browser and account context, ensuring you remain in complete control of your health journey.
           </p>
           
           <div className="flex flex-wrap justify-center gap-4 mt-2">
             <span className="px-4 py-1.5 bg-white border border-nura-rose-medium/30 rounded-full text-xs font-semibold text-nura-slate shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              Next.js 15 App Router
+              100% Private Device Storage
             </span>
             <span className="px-4 py-1.5 bg-white border border-nura-rose-medium/30 rounded-full text-xs font-semibold text-nura-slate shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              Tailwind CSS v4 (PostCSS)
+              No Third-Party Analytics
             </span>
             <span className="px-4 py-1.5 bg-white border border-nura-rose-medium/30 rounded-full text-xs font-semibold text-nura-slate shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              Secure HTTP-Only Sessions
+              Secure Session Isolation
             </span>
             <span className="px-4 py-1.5 bg-white border border-nura-rose-medium/30 rounded-full text-xs font-semibold text-nura-slate shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-              Double-Submit Cookie CSRF
+              Open Source Transparency
             </span>
           </div>
         </section>
