@@ -17,8 +17,8 @@ export const Card: React.FC<CardProps> = ({
   const baseStyle = "rounded-3xl p-6 transition-all duration-300";
 
   const variantStyles = {
-    default: "bg-white shadow-[0_8px_30px_rgb(217,116,91,0.06)] border border-nura-rose-light",
-    glass: "glass-panel shadow-[0_8px_32px_0_rgba(217,116,91,0.04)]",
+    default: "bg-white shadow-[0_8px_30px_rgba(217,107,82,0.04)] border border-nura-rose-medium/20 glow-card",
+    glass: "glass-panel shadow-[0_8px_32px_0_rgba(217,107,82,0.03)] glow-card",
     outline: "border-2 border-nura-rose-medium bg-transparent",
   };
 

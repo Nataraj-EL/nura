@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  /* Wellness Theme Palette */
-  --color-nura-terracotta: #d9745b;
-  --color-nura-rose-dark: #e0a396;
-  --color-nura-rose-light: #fdf5f3;
-  --color-nura-rose-medium: #f2ccc3;
-  --color-nura-sage: #81b29a;
-  --color-nura-sage-light: #f0f6f3;
-  --color-nura-slate: #3d405b;
-  --color-nura-cream: #fbf8f3;
+  /* Wellness Theme Palette - Curated Cozy/Warm Earthy Hues */
+  --color-nura-terracotta: #d96b52;
+  --color-nura-rose-dark: #dfa092;
+  --color-nura-rose-light: #fcf9f6;
+  --color-nura-rose-medium: #ead5d0;
+  --color-nura-sage: #7da892;
+  --color-nura-sage-light: #eff4f1;
+  --color-nura-slate: #35374e;
+  --color-nura-cream: #faf6f0;
   
   /* Semantic Brand Names */
   --color-brand-primary: var(--color-nura-terracotta);
@@ -29,7 +29,8 @@
 }
 
 body {
-  background-color: var(--background);
+  background: linear-gradient(135deg, #faf6f0 0%, #fdfbf8 50%, #f7ebe4 100%);
+  background-attachment: fixed;
   color: var(--foreground);
   min-height: 100vh;
   display: flex;
@@ -62,10 +63,26 @@ input:focus-visible {
   background: var(--color-nura-terracotta);
 }
 
-/* Glassmorphism helpers using standard Tailwind utilities */
+/* Glassmorphism helpers with improved softness */
 .glass-panel {
-  background-color: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(217, 107, 82, 0.02);
 }
+
+/* Radial sunset glow card overlay */
+.glow-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 100% 0%, rgba(217, 107, 82, 0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
